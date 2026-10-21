@@ -113,7 +113,8 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Quick Test Fixtures Helper */}
+          {/* Quick Test Fixtures Helper: dev server only, stripped from production builds */}
+          {import.meta.env.DEV && (
           <div className="mt-6 pt-6 border-t border-slate-200">
             <p className="text-xs text-slate-500 text-center font-medium mb-2">Test Users for Quick Login:</p>
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -139,6 +140,7 @@ export const LoginPage: React.FC = () => {
               </button>
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>
