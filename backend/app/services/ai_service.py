@@ -32,16 +32,22 @@ _CREATE_TASK_PREFIX = re.compile(
 def _parse_new_task_titles(message: str) -> List[str]:
     """Task titles from 'create task X', or several from one-per-line lists and 'create tasks A, B and C'."""
     m = _CREATE_TASK_PREFIX.match(message)
-    if not m:
-        return []
+    if m:
+        body = message[m.end():]
+    else:
+        # "Please add these to my tasks:" + one task per following line
+        first, _, body = message.strip().partition("\n")
+        if not (body.strip() and re.search(r"\b(?:add|create)\b", first, re.I)
+                and re.search(r"\b(?:tasks?|todos?|to-?do|list)\b", first, re.I)):
+            return []
     items = []
-    for line in message[m.end():].splitlines():
+    for line in body.splitlines():
         line = re.sub(r"^\s*(?:[-*•]|\d+[.)])\s*", "", line)  # list bullets / numbering
         line = re.sub(r"\s+to\s+my\s+(?:tasks|task list|list|to-?do(?:\s+list)?)\s*$", "", line, flags=re.IGNORECASE)
         line = line.strip().strip("'\"").rstrip(".").strip()
         if line:
             items.append(line)
-    if len(items) == 1 and m.group(1):  # plural "tasks" on one line: split the list
+    if len(items) == 1 and m and m.group(1):  # plural "tasks" on one line: split the list
         items = [p.strip().strip("'\"") for p in re.split(r",|;|\s+and\s+", items[0]) if p.strip()]
     return items
 
@@ -1402,6 +1408,23 @@ class AIService:
                 {"response_type": "text"}
             )
 
+        # Create task intent (one task, or several: one per line / "tasks A, B and C")
+        new_titles = _parse_new_task_titles(user_message)
+        if new_titles:
+            priority = "high" if re.search(r"\bhigh\b", msg_lower) else "medium"
+            created, failed = [], []
+            for title in new_titles:
+                tools_executed.append("create_my_task")
+                res = await execute_tool("create_my_task", {"title": title, "priority": priority}, current_user, db)
+                (created if res.get("success") else failed).append(res.get("task", {}).get("title") or title)
+            if not created:
+                return "Failed to create task: " + ", ".join(failed), tools_executed, {"response_type": "error"}
+            lines = [f"Added **{len(created)}** task{'s' if len(created) > 1 else ''} (Priority: `{priority}`):"]
+            lines += [f"- {t}" for t in created]
+            if failed:
+                lines.append(f"\nCould not add: {', '.join(failed)}")
+            return "\n".join(lines), tools_executed, {"response_type": "action_result"}
+
         # Workload Analysis & Priority Guidance
         if any(k in msg_lower for k in [
             "workload", "what should i do first", "what do i do first",
@@ -1529,23 +1552,6 @@ class AIService:
             for t in tasks:
                 lines.append(f"- **{t['title']}** — Status: `{t['status']}`")
             return "\n".join(lines), tools_executed, {"response_type": "text"}
-
-        # Create task intent (one task, or several: one per line / "tasks A, B and C")
-        new_titles = _parse_new_task_titles(user_message)
-        if new_titles:
-            priority = "high" if re.search(r"\bhigh\b", msg_lower) else "medium"
-            created, failed = [], []
-            for title in new_titles:
-                tools_executed.append("create_my_task")
-                res = await execute_tool("create_my_task", {"title": title, "priority": priority}, current_user, db)
-                (created if res.get("success") else failed).append(res.get("task", {}).get("title") or title)
-            if not created:
-                return "Failed to create task: " + ", ".join(failed), tools_executed, {"response_type": "error"}
-            lines = [f"Added **{len(created)}** task{'s' if len(created) > 1 else ''} (Priority: `{priority}`):"]
-            lines += [f"- {t}" for t in created]
-            if failed:
-                lines.append(f"\nCould not add: {', '.join(failed)}")
-            return "\n".join(lines), tools_executed, {"response_type": "action_result"}
 
         # Search task intent
         search_match = re.search(r"(?:search|find|lookup|show\s+task|tasks?\s+(?:about|related\s+to|containing))\s+[\"']?([^\"'\n]+)[\"']?", msg_lower)

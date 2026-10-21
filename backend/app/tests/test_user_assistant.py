@@ -32,6 +32,18 @@ async def test_builtin_engine_adds_every_task_from_a_multiline_message(client: A
     assert sorted(await _titles(client, headers)) == ["Agentic AI study", "App building", "FASTTAPI research"]
 
 
+@pytest.mark.asyncio
+async def test_builtin_engine_adds_listed_tasks_even_with_keyword_titles(client: AsyncClient):
+    # "my tasks" and "summary" must not turn this into a listing or a summary
+    headers = await _new_user(client)
+    await client.post(
+        "/api/v1/chat/message",
+        json={"content": "Please add these to my tasks:\nWrite summary\nCall bank"},
+        headers=headers,
+    )
+    assert sorted(await _titles(client, headers)) == ["Call bank", "Write summary"]
+
+
 def _fake_llm(monkeypatch, replies: list, sent: list):
     """Stand-in for Gemini's OpenAI-compatible endpoint: returns `replies` in order."""
     monkeypatch.setattr(settings, "OPENAI_API_KEY", "test-key")
