@@ -5,6 +5,7 @@ from sqlalchemy import (
     Column,
     String,
     Boolean,
+    Integer,
     DateTime,
     ForeignKey,
     Text,
@@ -45,6 +46,8 @@ class User(Base):
         server_default="user",
     )
     is_active = Column(Boolean, nullable=False, default=True, server_default=text("true"))
+    failed_login_attempts = Column(Integer, nullable=False, default=0, server_default=text("0"))
+    locked_until = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP"))
 

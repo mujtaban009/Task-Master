@@ -44,6 +44,8 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     role user_role NOT NULL DEFAULT 'user',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    failed_login_attempts INTEGER NOT NULL DEFAULT 0,  -- brute-force lockout counter
+    locked_until TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

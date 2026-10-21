@@ -59,6 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
+      // The next person to log in on this tab must not inherit this user's chat state
+      sessionStorage.removeItem('chat_active_conversation_id');
+      sessionStorage.removeItem('chat_widget_open');
       setUser(null);
       window.location.href = '/login';
     }

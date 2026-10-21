@@ -25,6 +25,8 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+let refreshInFlight: Promise<string> | null = null;
+
 // Response Interceptor: Handle Token Expiration & Refresh Flow
 apiClient.interceptors.response.use(
   (response) => response,
@@ -36,20 +38,31 @@ apiClient.interceptors.response.use(
 
       if (refreshToken) {
         try {
-          const res = await axios.post(
-            `${API_BASE_URL}/auth/refresh`,
-            { refresh_token: refreshToken },
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': BACKEND_API_KEY,
-              },
-            }
-          );
+          // Requests that fail together share one refresh: a second call with the
+          // same single-use token would look like theft and end every session
+          refreshInFlight ??= axios
+            .post(
+              `${API_BASE_URL}/auth/refresh`,
+              { refresh_token: refreshToken },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-API-Key': BACKEND_API_KEY,
+                },
+              }
+            )
+            .then((res) => {
+              const { access_token, refresh_token } = res.data;
+              localStorage.setItem('access_token', access_token);
+              localStorage.setItem('refresh_token', refresh_token);
+              return access_token as string;
+            })
+            .finally(() => {
+              refreshInFlight = null;
+            });
 
-          const { access_token } = res.data;
-          localStorage.setItem('access_token', access_token);
-          originalRequest.headers.Authorization = `Bearer ${access_token}`;
+          const accessToken = await refreshInFlight;
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return apiClient(originalRequest);
         } catch (refreshErr) {
           // Token refresh failed -> Clear session and redirect to login

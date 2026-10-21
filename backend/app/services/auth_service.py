@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 from fastapi import HTTPException, status
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -15,6 +15,9 @@ from app.core.security import (
 )
 from app.models import User, UserRole, RefreshToken
 from app.schemas import UserCreate, TokenResponse, TokenRefreshResponse
+
+MAX_FAILED_LOGINS = 5
+LOCKOUT_DURATION = timedelta(minutes=15)
 
 class AuthService:
     @staticmethod
@@ -67,13 +70,30 @@ class AuthService:
         stmt = select(User).where(func.lower(User.email) == email_clean)
         result = await db.execute(stmt)
         user = result.scalar_one_or_none()
+        now = datetime.now(timezone.utc)
+
+        # Brute-force protection: refuse even the right password while locked
+        if user and user.locked_until and user.locked_until > now:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many failed login attempts. Try again in 15 minutes.",
+            )
 
         if not user or not verify_password(password, user.password_hash):
+            if user:
+                user.failed_login_attempts += 1
+                if user.failed_login_attempts >= MAX_FAILED_LOGINS:
+                    user.locked_until = now + LOCKOUT_DURATION
+                    user.failed_login_attempts = 0
+                await db.commit()
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password.",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+
+        user.failed_login_attempts = 0
+        user.locked_until = None
 
         if not user.is_active:
             raise HTTPException(
@@ -117,10 +137,15 @@ class AuthService:
         stmt = select(RefreshToken).where(
             RefreshToken.token_hash == hashed,
             RefreshToken.user_id == user_id,
-            RefreshToken.revoked == False,
         )
         result = await db.execute(stmt)
         db_token = result.scalar_one_or_none()
+
+        if db_token and db_token.revoked:
+            # A rotated-out token came back: it was stolen or replayed, so end every session
+            await db.execute(update(RefreshToken).where(RefreshToken.user_id == user_id).values(revoked=True))
+            await db.commit()
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked or expired")
 
         if not db_token or db_token.expires_at < datetime.now(timezone.utc):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked or expired")
@@ -133,10 +158,20 @@ class AuthService:
         if not user or not user.is_active:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found or inactive")
 
-        # Issue new access token
+        # Rotate: the old refresh token is single-use, a new one replaces it
+        db_token.revoked = True
+        new_refresh_token = create_refresh_token(subject=user.id)
+        db.add(RefreshToken(
+            user_id=user.id,
+            token_hash=hash_token(new_refresh_token),
+            expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        ))
+        await db.commit()
+
         new_access_token = create_access_token(subject=user.id, role=user.role.value)
         return TokenRefreshResponse(
             access_token=new_access_token,
+            refresh_token=new_refresh_token,
             expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         )
 

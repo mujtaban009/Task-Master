@@ -44,6 +44,7 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
     redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
+    openapi_url="/openapi.json" if settings.ENVIRONMENT != "production" else None,
 )
 
 # CORS Configuration
@@ -83,7 +84,9 @@ async def health_check():
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1;"))
     except Exception as e:
-        db_status = f"unhealthy: {str(e)}"
+        # Driver errors can contain the database host and user; keep them in the logs only
+        logger.error(f"Health check database failure: {e}")
+        db_status = "unhealthy"
 
     return {
         "status": "online" if db_status == "healthy" else "degraded",
