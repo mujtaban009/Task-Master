@@ -735,7 +735,7 @@ class AIService:
             headers["HTTP-Referer"] = "http://localhost:5173"
             headers["X-Title"] = "TaskMaster AI Assistant"
 
-        async with httpx.AsyncClient(timeout=40.0) as client:
+        async with httpx.AsyncClient(timeout=15.0) as client:
             req_body: Dict[str, Any] = {
                 "model": settings.LLM_MODEL,
                 "messages": messages_payload,

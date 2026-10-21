@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     # Defaults target Google Gemini's free OpenAI-compatible API; only OPENAI_API_KEY must be set
     OPENAI_BASE_URL: Optional[str] = "https://generativelanguage.googleapis.com/v1beta/openai"
-    LLM_MODEL: str = "gemini-3.8-flash"  # Google retired 2.5-flash for new keys
+    LLM_MODEL: str = "gemini-3.5-flash-lite"  # fastest stable Gemini; 2.5-flash is closed to new keys
 
     # CORS
     ALLOWED_ORIGINS: List[str] = [
