@@ -46,6 +46,9 @@ CREATE TABLE users (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     failed_login_attempts INTEGER NOT NULL DEFAULT 0,  -- brute-force lockout counter
     locked_until TIMESTAMPTZ,
+    reset_code_hash VARCHAR(64),  -- HMAC of the forgot-password code, never the code itself
+    reset_code_expires_at TIMESTAMPTZ,
+    reset_code_attempts INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
