@@ -117,35 +117,6 @@ export const LoginPage: React.FC = () => {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-
-          {/* Quick Test Fixtures Helper: dev server only, stripped from production builds */}
-          {import.meta.env.DEV && (
-          <div className="mt-6 pt-6 border-t border-slate-200">
-            <p className="text-xs text-slate-500 text-center font-medium mb-2">Test Users for Quick Login:</p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('admin@example.com');
-                  setPassword('password');
-                }}
-                className="py-1 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-center transition"
-              >
-                Admin User
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('alice@example.com');
-                  setPassword('password');
-                }}
-                className="py-1 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-center transition"
-              >
-                Standard User
-              </button>
-            </div>
-          </div>
-          )}
         </div>
       </div>
     </div>
