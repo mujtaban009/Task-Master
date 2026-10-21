@@ -48,6 +48,10 @@ class User(Base):
     is_active = Column(Boolean, nullable=False, default=True, server_default=text("true"))
     failed_login_attempts = Column(Integer, nullable=False, default=0, server_default=text("0"))
     locked_until = Column(DateTime(timezone=True), nullable=True)
+    # Forgot-password one-time code (only its HMAC is stored)
+    reset_code_hash = Column(String(64), nullable=True)
+    reset_code_expires_at = Column(DateTime(timezone=True), nullable=True)
+    reset_code_attempts = Column(Integer, nullable=False, default=0, server_default=text("0"))
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP"))
 

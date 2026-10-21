@@ -59,6 +59,14 @@ class TokenResponse(BaseModel):
 class TokenRefreshRequest(BaseModel):
     refresh_token: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(..., pattern=r"^\d{6}$")
+    new_password: str = Field(..., min_length=8, max_length=128)
+
 class TokenRefreshResponse(BaseModel):
     access_token: str
     refresh_token: str

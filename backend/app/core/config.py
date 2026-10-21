@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     OPENAI_BASE_URL: Optional[str] = "https://generativelanguage.googleapis.com/v1beta/openai"
     LLM_MODEL: str = "gemini-3.5-flash-lite"  # fastest stable Gemini; 2.5-flash is closed to new keys
 
+    # Forgot-password emails via Gmail SMTP: a Gmail address + a Gmail "App password"
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+
     # CORS
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:5173",

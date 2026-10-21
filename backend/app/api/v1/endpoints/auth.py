@@ -10,6 +10,8 @@ from app.schemas import (
     TokenResponse,
     TokenRefreshRequest,
     TokenRefreshResponse,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from app.services.auth_service import AuthService
 
@@ -48,3 +50,21 @@ async def logout(
     """Revoke the current refresh token session and log out."""
     await AuthService.logout(db, refresh_in.refresh_token, current_user.id)
     return None
+
+@router.post("/forgot-password")
+async def forgot_password(
+    body: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Email a 6-digit reset code. Same answer whether or not the account exists."""
+    await AuthService.forgot_password(db, body.email)
+    return {"detail": "If an account exists for that email, a reset code has been sent."}
+
+@router.post("/reset-password")
+async def reset_password(
+    body: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Set a new password using the emailed code; signs out every existing session."""
+    await AuthService.reset_password(db, body.email, body.code, body.new_password)
+    return {"detail": "Password updated. You can now sign in with your new password."}

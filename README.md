@@ -79,5 +79,6 @@ One Vercel project serves both parts: `vercel.json` builds `frontend/` as static
 2. **Storage → Create → Neon (Postgres)** and connect it to the project. This adds `POSTGRES_URL`, which the backend uses automatically.
 3. In Neon's SQL editor, run `database/init/01_schema.sql`, `03_chat_schema.sql` and `04_notifications_schema.sql`. Skip `02_seed.sql`: its demo accounts use the password `password`.
 4. **Settings → Environment Variables:** add `JWT_SECRET_KEY` (generate with `python -c "import secrets; print(secrets.token_hex(32))"`) and `ENVIRONMENT=production`. Redeploy.
+   Optional: `OPENAI_API_KEY` (free Gemini key from aistudio.google.com) for the AI assistant, and `SMTP_USER` (a Gmail address) + `SMTP_PASSWORD` (a Gmail App password) so forgot-password codes are emailed.
 5. Register on the live site, then make yourself admin in Neon's SQL editor:
    `UPDATE users SET role = 'admin' WHERE email = 'you@example.com';`

@@ -1,3 +1,6 @@
+import hashlib
+import hmac
+import secrets
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 from fastapi import HTTPException, status
@@ -15,9 +18,19 @@ from app.core.security import (
 )
 from app.models import User, UserRole, RefreshToken
 from app.schemas import UserCreate, TokenResponse, TokenRefreshResponse
+from app.services.email_service import send_email
 
 MAX_FAILED_LOGINS = 5
 LOCKOUT_DURATION = timedelta(minutes=15)
+
+RESET_CODE_TTL = timedelta(minutes=10)
+RESET_CODE_MAX_ATTEMPTS = 5
+RESET_CODE_RESEND_AFTER = timedelta(seconds=60)
+
+
+def _reset_code_hash(user_id: UUID, code: str) -> str:
+    # Keyed with the server secret: a leaked database row cannot be brute-forced offline
+    return hmac.new(settings.JWT_SECRET_KEY.encode(), f"{user_id}:{code}".encode(), hashlib.sha256).hexdigest()
 
 class AuthService:
     @staticmethod
@@ -188,3 +201,64 @@ class AuthService:
         if db_token:
             db_token.revoked = True
             await db.commit()
+
+    @staticmethod
+    async def forgot_password(db: AsyncSession, email: str) -> None:
+        """Email a 6-digit reset code. Silent for unknown emails so accounts cannot be discovered."""
+        user = (await db.execute(
+            select(User).where(func.lower(User.email) == email.strip().lower())
+        )).scalar_one_or_none()
+        if not user or not user.is_active:
+            return
+
+        now = datetime.now(timezone.utc)
+        # At most one email per minute per account
+        if user.reset_code_expires_at and user.reset_code_expires_at - RESET_CODE_TTL + RESET_CODE_RESEND_AFTER > now:
+            return
+
+        code = f"{secrets.randbelow(1_000_000):06d}"
+        user.reset_code_hash = _reset_code_hash(user.id, code)
+        user.reset_code_expires_at = now + RESET_CODE_TTL
+        user.reset_code_attempts = 0
+        await db.commit()
+
+        await send_email(
+            user.email,
+            "Your TaskMaster password reset code",
+            f"Hi {user.full_name},\n\n"
+            f"Your password reset code is: {code}\n\n"
+            "It expires in 10 minutes. If you did not ask to reset your password, ignore this email; "
+            "your password stays the same.\n\n- TaskMaster",
+        )
+
+    @staticmethod
+    async def reset_password(db: AsyncSession, email: str, code: str, new_password: str) -> None:
+        invalid = HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired code. Request a new one.",
+        )
+        user = (await db.execute(
+            select(User).where(func.lower(User.email) == email.strip().lower())
+        )).scalar_one_or_none()
+        now = datetime.now(timezone.utc)
+        if (
+            not user or not user.is_active or not user.reset_code_hash
+            or not user.reset_code_expires_at or user.reset_code_expires_at < now
+            or user.reset_code_attempts >= RESET_CODE_MAX_ATTEMPTS
+        ):
+            raise invalid
+
+        if not hmac.compare_digest(user.reset_code_hash, _reset_code_hash(user.id, code)):
+            user.reset_code_attempts += 1
+            await db.commit()
+            raise invalid
+
+        user.password_hash = get_password_hash(new_password)
+        user.reset_code_hash = None
+        user.reset_code_expires_at = None
+        user.reset_code_attempts = 0
+        # The owner proved access to the email: lift any login lockout, end all old sessions
+        user.failed_login_attempts = 0
+        user.locked_until = None
+        await db.execute(update(RefreshToken).where(RefreshToken.user_id == user.id).values(revoked=True))
+        await db.commit()
