@@ -1,14 +1,2 @@
-# Runtime dependencies only (also installed by Vercel via the root requirements.txt).
-# Every package here ships prebuilt wheels for Python 3.12-3.14.
-fastapi==0.115.8
-pydantic==2.12.5
-pydantic-settings==2.7.1
-email-validator==2.2.0
-sqlalchemy[asyncio]>=2.0.38
-greenlet>=3.0.0
-psycopg[binary]>=3.2.4
-pyjwt==2.10.1
-passlib[bcrypt]==1.7.4
-bcrypt==4.2.1
-python-multipart==0.0.20
-httpx==0.28.1
+# Runtime dependencies live in the repo-root requirements.txt (Vercel installs that file directly).
+-r ../requirements.txt
