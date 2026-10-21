@@ -40,8 +40,9 @@ class Settings(BaseSettings):
     CHATBOT_API_KEY: str = "cb_live_8f3a9e14c72b05d1e67a42b98f2316"
     CHATBOT_SERVICE_URL: str = "http://127.0.0.1:8001/api/chat"
     OPENAI_API_KEY: Optional[str] = None
-    OPENAI_BASE_URL: Optional[str] = None
-    LLM_MODEL: str = "gpt-4o-mini"
+    # Defaults target Google Gemini's free OpenAI-compatible API; only OPENAI_API_KEY must be set
+    OPENAI_BASE_URL: Optional[str] = "https://generativelanguage.googleapis.com/v1beta/openai"
+    LLM_MODEL: str = "gemini-2.5-flash"
 
     # CORS
     ALLOWED_ORIGINS: List[str] = [

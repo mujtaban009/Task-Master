@@ -61,17 +61,6 @@ export const ChatAssistantWidget: React.FC = () => {
         }
   ) as React.CSSProperties;
 
-  // Subtle pointer tilt (max 2deg); disabled by prefers-reduced-motion in CSS
-  const handleTilt = (e: React.MouseEvent<HTMLDivElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    e.currentTarget.style.setProperty('--ai-ry', `${((e.clientX - r.left) / r.width - 0.5) * 4}deg`);
-    e.currentTarget.style.setProperty('--ai-rx', `${-((e.clientY - r.top) / r.height - 0.5) * 4}deg`);
-  };
-  const resetTilt = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.currentTarget.style.setProperty('--ai-ry', '0deg');
-    e.currentTarget.style.setProperty('--ai-rx', '0deg');
-  };
-
   // Sync open state to sessionStorage
   useEffect(() => {
     sessionStorage.setItem('chat_widget_open', isOpen ? 'true' : 'false');
@@ -242,7 +231,7 @@ export const ChatAssistantWidget: React.FC = () => {
     : [
         { label: 'Show all my tasks' },
         { label: 'Which tasks are still pending?' },
-        { label: 'Add task Prepare meeting notes', fill: true },
+        { label: 'Create tasks Prepare slides, Email the team and Book a room', fill: true },
         { label: 'Summarize my tasks' },
       ];
 
@@ -469,9 +458,7 @@ export const ChatAssistantWidget: React.FC = () => {
         <div
           role="dialog"
           aria-label="AI Assistant Chat"
-          onMouseMove={handleTilt}
-          onMouseLeave={resetTilt}
-          className="ai-panel fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[440px] h-[620px] max-h-[80vh] bg-white/95 backdrop-blur rounded-3xl border border-white/60 ring-1 ring-slate-900/5 flex flex-col overflow-hidden"
+          className="ai-panel fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[480px] xl:w-[540px] h-[720px] max-h-[calc(100vh-8rem)] bg-white rounded-3xl border border-slate-200/80 ring-1 ring-slate-900/5 flex flex-col overflow-hidden"
         >
           {/* Header */}
           <div className="ai-header relative z-10 text-white px-4 py-3.5 flex items-center justify-between">
@@ -621,7 +608,7 @@ export const ChatAssistantWidget: React.FC = () => {
                     <p className="text-sm text-slate-600 mt-1 max-w-xs mx-auto leading-relaxed">
                       {isAdmin
                         ? 'I can see every user and task. Ask me to add tasks to your panel, assign work to users, or check workloads.'
-                        : 'I can see only your own tasks. Ask about statuses, priorities and deadlines, or create a new task.'}
+                        : 'Ask me anything, or manage your tasks: add several at once, check deadlines, or get a summary. I only see your own data.'}
                     </p>
 
                     {/* Quick Suggestion Chips */}
