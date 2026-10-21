@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import re
@@ -728,7 +729,7 @@ class AIService:
             headers["HTTP-Referer"] = "http://localhost:5173"
             headers["X-Title"] = "TaskMaster AI Assistant"
 
-        async with httpx.AsyncClient(timeout=25.0) as client:
+        async with httpx.AsyncClient(timeout=40.0) as client:
             req_body: Dict[str, Any] = {
                 "model": settings.LLM_MODEL,
                 "messages": messages_payload,
@@ -737,6 +738,10 @@ class AIService:
             }
 
             resp = await client.post(f"{base_url}/chat/completions", headers=headers, json=req_body)
+            if resp.status_code in (429, 503):
+                # Free tiers return these for short load spikes; one retry usually succeeds
+                await asyncio.sleep(2)
+                resp = await client.post(f"{base_url}/chat/completions", headers=headers, json=req_body)
             if resp.status_code != 200:
                 raise RuntimeError(f"LLM API responded with {resp.status_code}: {resp.text[:250]}")
 

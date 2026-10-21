@@ -44,6 +44,8 @@ def _fake_llm(monkeypatch, replies: list, sent: list):
         reply = replies.pop(0)
         if isinstance(reply, Exception):
             raise reply
+        if isinstance(reply, httpx.Response):
+            return reply
         return httpx.Response(200, json={"choices": [{"message": reply}]})
 
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
@@ -71,6 +73,18 @@ async def test_llm_adds_several_tasks_and_prompt_hides_system_data(client: Async
     assert "System Overview" not in system_prompt  # no user counts for regular users
     assert all(t["function"]["name"].startswith(("list_my", "search_my", "get_my", "create_my", "update_my"))
                for t in sent[0]["tools"])  # no admin tools offered
+
+
+@pytest.mark.asyncio
+async def test_llm_overloaded_once_is_retried(client: AsyncClient, monkeypatch):
+    headers = await _new_user(client)
+    _fake_llm(monkeypatch, [
+        httpx.Response(503, json={"error": {"code": 503, "message": "high demand"}}),
+        {"role": "assistant", "content": "GraphQL uses one endpoint."},
+    ], [])
+
+    res = await client.post("/api/v1/chat/message", json={"content": "REST vs GraphQL?"}, headers=headers)
+    assert res.json()["assistant_message"]["content"] == "GraphQL uses one endpoint."
 
 
 @pytest.mark.asyncio
