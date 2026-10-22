@@ -318,3 +318,69 @@
 @media (prefers-reduced-motion: reduce) {
   .lp-word, .lp-fade, .lp-marquee-track { animation: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   Auth pages (login / register / forgot password): light theme with motion
+   --------------------------------------------------------------------------- */
+.auth-blob { position: absolute; border-radius: 9999px; filter: blur(70px); will-change: transform; }
+.auth-blob-1 { width: 34rem; height: 34rem; left: -10rem; top: -10rem; background: rgba(16, 185, 129, 0.38); animation: auth-drift 22s ease-in-out infinite alternate; }
+.auth-blob-2 { width: 30rem; height: 30rem; right: -8rem; top: 25%; background: rgba(139, 92, 246, 0.30); animation: auth-drift 28s ease-in-out infinite alternate-reverse; }
+.auth-blob-3 { width: 26rem; height: 26rem; left: 30%; bottom: -12rem; background: rgba(14, 165, 233, 0.30); animation: auth-drift 34s ease-in-out infinite alternate; }
+@keyframes auth-drift { to { translate: 70px 50px; scale: 1.12; } }
+
+.auth-dots {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.2) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+}
+
+/* Bright clock dial with a glowing second hand: one turn per minute, like the landing page */
+.auth-clock { position: absolute; width: 30rem; right: -9rem; top: 4rem; color: rgba(110, 231, 183, 0.65); filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.55)); }
+.auth-hand { color: #ecfeff; filter: drop-shadow(0 0 6px rgba(103, 232, 249, 0.95)); transform-box: view-box; transform-origin: 200px 200px; animation: auth-spin 60s linear infinite; }
+@keyframes auth-spin { to { transform: rotate(360deg); } }
+@media (max-width: 640px) { .auth-clock { width: 22rem; right: -10rem; top: auto; bottom: -4rem; } }
+
+.auth-rise { animation: auth-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes auth-rise {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.auth-logo { animation: auth-bob 5s ease-in-out infinite; }
+@keyframes auth-bob { 50% { translate: 0 -4px; } }
+
+/* Form fields appear one after another */
+.auth-card form > * { animation: auth-field 0.5s ease-out both; }
+.auth-card form > *:nth-child(1) { animation-delay: 380ms; }
+.auth-card form > *:nth-child(2) { animation-delay: 450ms; }
+.auth-card form > *:nth-child(3) { animation-delay: 520ms; }
+.auth-card form > *:nth-child(4) { animation-delay: 590ms; }
+.auth-card form > *:nth-child(5) { animation-delay: 660ms; }
+.auth-card form > *:nth-child(n+6) { animation-delay: 730ms; }
+@keyframes auth-field { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+.auth-card input { transition: box-shadow 200ms ease, border-color 200ms ease, background-color 200ms ease; }
+.auth-card input:focus { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.16); background-color: #fff; }
+
+.auth-card button[type='submit'] {
+  position: relative; overflow: hidden;
+  transition: transform 150ms ease, box-shadow 200ms ease, background-color 200ms ease;
+  box-shadow: 0 10px 24px -10px rgba(16, 185, 129, 0.7);
+}
+.auth-card button[type='submit']:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 30px -10px rgba(16, 185, 129, 0.8); }
+.auth-card button[type='submit']:active:not(:disabled) { transform: translateY(1px); }
+.auth-card button[type='submit']::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-120%); transition: transform 700ms ease;
+}
+.auth-card button[type='submit']:hover:not(:disabled)::after { transform: translateX(120%); }
+
+/* Error banner shakes once when it appears */
+.auth-card .bg-red-50 { animation: auth-shake 0.45s ease; }
+@keyframes auth-shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-blob, .auth-hand, .auth-rise, .auth-logo, .auth-card form > *, .auth-card .bg-red-50 { animation: none; }
+}

@@ -61,6 +61,25 @@ export const ChatAssistantWidget: React.FC = () => {
         }
   ) as React.CSSProperties;
 
+  // Height of the on-screen keyboard, so the chat panel can sit above it on phones
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () =>
+      document.documentElement.style.setProperty(
+        '--kb',
+        `${Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop))}px`
+      );
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+      document.documentElement.style.removeProperty('--kb');
+    };
+  }, []);
+
   // Sync open state to sessionStorage
   useEffect(() => {
     sessionStorage.setItem('chat_widget_open', isOpen ? 'true' : 'false');
@@ -452,21 +471,21 @@ export const ChatAssistantWidget: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50" style={accentVars}>
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50" style={accentVars}>
       {/* Floating Chat Panel */}
       {isOpen && (
         <div
           role="dialog"
           aria-label="AI Assistant Chat"
-          className="ai-panel fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[480px] xl:w-[540px] h-[720px] max-h-[calc(100vh-8rem)] bg-white rounded-3xl border border-slate-200/80 ring-1 ring-slate-900/5 flex flex-col overflow-hidden"
+          className="ai-panel peer max-sm:focus-within:bottom-[calc(var(--kb,0px)+0.75rem)] max-sm:focus-within:h-[min(34rem,calc(100dvh-var(--kb,0px)-1.5rem))] max-sm:focus-within:max-h-[calc(100dvh-var(--kb,0px)-1.5rem)] fixed bottom-[5.75rem] right-3 sm:bottom-[6.75rem] sm:right-6 w-[min(calc(100vw-1.5rem),23.5rem)] h-[min(34rem,70dvh)] sm:w-[clamp(22rem,30vw,28rem)] sm:h-[clamp(24rem,68vh,38rem)] max-h-[calc(100dvh-7.5rem)] bg-white rounded-3xl border border-slate-200/80 ring-1 ring-slate-900/5 flex flex-col overflow-hidden"
         >
           {/* Header */}
-          <div className="ai-header relative z-10 text-white px-4 py-3.5 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="ai-orb w-10 h-10 flex items-center justify-center text-white" aria-hidden="true">
+          <div className="ai-header relative z-10 text-white px-3 py-2.5 sm:px-4 sm:py-3.5 [@media(max-height:480px)]:py-1.5 flex items-center justify-between">
+            <div className="flex min-w-0 items-center space-x-2.5 sm:space-x-3">
+              <div className="ai-orb w-9 h-9 sm:w-10 sm:h-10 shrink-0 flex items-center justify-center text-white" aria-hidden="true">
                 <Bot className="w-5 h-5 drop-shadow" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center space-x-2">
                   <h3 className="font-semibold text-sm tracking-tight">
                     {isAdmin ? 'Admin Agent' : 'My Assistant'}
@@ -483,7 +502,7 @@ export const ChatAssistantWidget: React.FC = () => {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-300">
+                <p className="truncate text-[11px] sm:text-xs text-slate-300 [@media(max-height:480px)]:hidden">
                   {isAdmin ? 'Full database access · create & assign tasks' : 'Only your own tasks and details'}
                 </p>
               </div>
@@ -753,7 +772,7 @@ export const ChatAssistantWidget: React.FC = () => {
               </div>
 
               {/* Input Area */}
-              <div className="p-3 bg-white/90 border-t border-slate-200/80">
+              <div className="p-3 [@media(max-height:480px)]:p-2 bg-white/90 border-t border-slate-200/80">
                 <div className="relative flex items-end bg-white border border-slate-300 rounded-2xl shadow-inner focus-within:ring-2 focus-within:ring-[var(--ai-accent)] focus-within:border-transparent transition">
                   <textarea
                     ref={inputRef}
@@ -764,7 +783,7 @@ export const ChatAssistantWidget: React.FC = () => {
                     disabled={isLoading}
                     aria-label="Message the assistant"
                     placeholder={isAdmin ? 'Add, assign or look up any task…' : 'Ask about your tasks…'}
-                    className="flex-1 resize-none bg-transparent px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none max-h-28 disabled:opacity-50"
+                    className="flex-1 resize-none bg-transparent px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none max-h-28 [@media(max-height:480px)]:h-10 [@media(max-height:480px)]:py-2 disabled:opacity-50"
                   />
                   <div className="p-1.5">
                     <button
@@ -785,10 +804,10 @@ export const ChatAssistantWidget: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-1.5 px-1 text-xs text-slate-500">
-                  <span>Press Enter to send, Shift+Enter for new line</span>
+                <div className="flex items-center justify-between mt-1.5 px-1 text-xs text-slate-500 [@media(max-height:480px)]:hidden">
+                  <span className="hidden sm:inline">Press Enter to send, Shift+Enter for new line</span>
                   {conversationId && (
-                    <span className="flex items-center space-x-1">
+                    <span className="ml-auto flex items-center space-x-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       <span>Active session</span>
                     </span>
@@ -801,13 +820,13 @@ export const ChatAssistantWidget: React.FC = () => {
       )}
 
       {/* Floating 3D Orb Launcher */}
-      <div className="relative flex flex-col items-center">
+      <div className="relative flex flex-col items-center max-sm:peer-focus-within:hidden">
         <button
           onClick={() => setIsOpen(!isOpen)}
           aria-label={isOpen ? 'Close AI assistant' : 'Open AI assistant'}
           aria-expanded={isOpen}
           title={isAdmin ? 'Admin Agent' : 'My Assistant'}
-          className="ai-orb ai-launcher group w-16 h-16 flex items-center justify-center text-white focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[var(--ai-accent)]"
+          className="ai-orb ai-launcher group w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center text-white focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[var(--ai-accent)]"
         >
           {isOpen ? (
             <X className="w-6 h-6 drop-shadow transition-transform duration-200 group-hover:rotate-90" />

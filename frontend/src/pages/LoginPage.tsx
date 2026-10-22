@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { apiClient } from '../api/client';
+import { AuthShell } from '../components/AuthShell';
 import { AuthTokens } from '../types';
-import { CheckSquare, Lock, Mail, AlertCircle } from 'lucide-react';
+import { Lock, Mail, AlertCircle } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -42,26 +43,17 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md">
-            <CheckSquare className="w-7 h-7" />
-          </div>
-        </div>
-        <h2 className="mt-4 text-center text-3xl font-extrabold text-slate-900 tracking-tight">
-          Sign in to your account
-        </h2>
-        <p className="mt-2 text-center text-sm text-slate-600">
+    <AuthShell
+      title="Sign in to your account"
+      subtitle={
+        <>
           Or{' '}
           <Link to="/register" className="font-medium text-emerald-600 hover:text-emerald-500">
             create a new account
           </Link>
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-sm sm:rounded-xl sm:px-10 border border-slate-200">
+        </>
+      }
+    >
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center text-sm">
               <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
@@ -117,9 +109,6 @@ export const LoginPage: React.FC = () => {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-        </div>
-      </div>
-    </div>
+    </AuthShell>
   );
 };
-

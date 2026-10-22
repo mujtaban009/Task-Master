@@ -32,7 +32,10 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Auth endpoints (login, register, reset...) answer 401 for wrong credentials: show that
+    // error on the page instead of treating it as an expired session and reloading /login
+    const isAuthCall = String(originalRequest?.url || '').includes('/auth/');
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthCall) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem('refresh_token');
 
