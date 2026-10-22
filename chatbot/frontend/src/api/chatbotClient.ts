@@ -9,7 +9,7 @@ interface CustomImportMeta {
 // Chatbot dedicated microservice configuration
 export const CHATBOT_API_KEY: string =
   ((import.meta as unknown as CustomImportMeta)?.env?.VITE_CHATBOT_API_KEY) ||
-  'cb_live_8f3a9e14c72b05d1e67a42b98f2316';
+  '';
 
 export const CHATBOT_BASE_URL: string =
   ((import.meta as unknown as CustomImportMeta)?.env?.VITE_CHATBOT_API_URL) ||
@@ -54,7 +54,7 @@ async function fetchClient<T>(
   const token = typeof localStorage !== 'undefined' ? localStorage.getItem('access_token') : null;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Chatbot-API-Key': CHATBOT_API_KEY,
+    ...(CHATBOT_API_KEY ? { 'X-Chatbot-API-Key': CHATBOT_API_KEY } : {}),
     ...(options.headers || {}),
   };
   if (token) {

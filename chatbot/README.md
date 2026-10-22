@@ -50,7 +50,7 @@ d:\Todolist\chatbot\
 Communication with the Chatbot microservice is secured using a dedicated API key:
 
 ```
-CHATBOT_API_KEY=cb_live_8f3a9e14c72b05d1e67a42b98f2316
+CHATBOT_API_KEY=<set in chatbot/backend/.env, never commit it>
 ```
 
 ### How the API Key Connects the System:
@@ -59,7 +59,7 @@ CHATBOT_API_KEY=cb_live_8f3a9e14c72b05d1e67a42b98f2316
    ```http
    POST /api/chat/message HTTP/1.1
    Host: 127.0.0.1:8001
-   X-Chatbot-API-Key: cb_live_8f3a9e14c72b05d1e67a42b98f2316
+   X-Chatbot-API-Key: <CHATBOT_API_KEY>
    Authorization: Bearer <user_jwt_token>
    Content-Type: application/json
    ```

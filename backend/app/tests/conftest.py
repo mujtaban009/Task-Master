@@ -61,7 +61,7 @@ async def client(db_session: AsyncSession):
     async with AsyncClient(
         transport=transport,
         base_url="http://test",
-        headers={"X-API-Key": settings.BACKEND_API_KEY},
+        headers={"X-API-Key": settings.BACKEND_API_KEY} if settings.BACKEND_API_KEY else {},
     ) as ac:
         yield ac
     app.dependency_overrides.clear()

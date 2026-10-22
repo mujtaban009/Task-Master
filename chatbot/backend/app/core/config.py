@@ -17,7 +17,7 @@ class ChatbotSettings(BaseSettings):
 
     # Chatbot Dedicated API Key Authentication
     # Required for frontend and backend to communicate with this chatbot service
-    CHATBOT_API_KEY: str = "cb_live_8f3a9e14c72b05d1e67a42b98f2316"
+    CHATBOT_API_KEY: str  # required: set in .env, never a default
 
     # Shared PostgreSQL Database (Same database as Todolist)
     DB_HOST: str = "127.0.0.1"

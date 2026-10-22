@@ -19,7 +19,7 @@ router = APIRouter()
 
 def verify_chatbot_key(x_chatbot_api_key: Optional[str] = Header(None, alias="X-Chatbot-API-Key")):
     """Validates X-Chatbot-API-Key when supplied by the client."""
-    if x_chatbot_api_key and x_chatbot_api_key.strip() != settings.CHATBOT_API_KEY:
+    if settings.CHATBOT_API_KEY and x_chatbot_api_key and x_chatbot_api_key.strip() != settings.CHATBOT_API_KEY:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid Chatbot API key. Access denied.",

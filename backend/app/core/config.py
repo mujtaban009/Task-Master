@@ -33,11 +33,11 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # Security & API Keys Architecture
-    BACKEND_API_KEY: str = "bk_live_4d9f8a2e1c7b05e3a6f82c1b9d4e7a2c"
+    BACKEND_API_KEY: Optional[str] = None  # set in .env / Vercel; never hardcode
     DATABASE_API_KEY: Optional[str] = None
 
     # AI Assistant & Chatbot Settings
-    CHATBOT_API_KEY: str = "cb_live_8f3a9e14c72b05d1e67a42b98f2316"
+    CHATBOT_API_KEY: Optional[str] = None  # set in .env / Vercel; never hardcode
     CHATBOT_SERVICE_URL: str = "http://127.0.0.1:8001/api/chat"
     OPENAI_API_KEY: Optional[str] = None
     # Defaults target Google Gemini's free OpenAI-compatible API; only OPENAI_API_KEY must be set
