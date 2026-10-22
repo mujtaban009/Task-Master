@@ -2,11 +2,11 @@ import { apiClient } from './client';
 import { ChatResponse, ChatConversation } from '../types';
 
 const CHATBOT_API_KEY =
-  import.meta.env.VITE_CHATBOT_API_KEY || 'cb_live_8f3a9e14c72b05d1e67a42b98f2316';
+  import.meta.env.VITE_CHATBOT_API_KEY || '';
 
-const chatHeaders = {
-  'X-Chatbot-API-Key': CHATBOT_API_KEY,
-};
+const chatHeaders: Record<string, string> = CHATBOT_API_KEY
+  ? { 'X-Chatbot-API-Key': CHATBOT_API_KEY }
+  : {};
 
 export const chatApi = {
   /**

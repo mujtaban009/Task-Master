@@ -2,20 +2,26 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 export const BACKEND_API_KEY =
-  import.meta.env.VITE_BACKEND_API_KEY || 'bk_live_4d9f8a2e1c7b05e3a6f82c1b9d4e7a2c';
+  import.meta.env.VITE_BACKEND_API_KEY || '';
+
+const apiKeyHeader: Record<string, string> = BACKEND_API_KEY
+  ? { 'X-API-Key': BACKEND_API_KEY }
+  : {};
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'X-API-Key': BACKEND_API_KEY,
+    ...apiKeyHeader,
   },
 });
 
 // Request Interceptor: Attach Backend API Key and JWT Bearer Access Token
 apiClient.interceptors.request.use(
   (config) => {
-    config.headers['X-API-Key'] = BACKEND_API_KEY;
+    if (BACKEND_API_KEY) {
+      config.headers['X-API-Key'] = BACKEND_API_KEY;
+    }
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -50,7 +56,7 @@ apiClient.interceptors.response.use(
               {
                 headers: {
                   'Content-Type': 'application/json',
-                  'X-API-Key': BACKEND_API_KEY,
+                  ...apiKeyHeader,
                 },
               }
             )
